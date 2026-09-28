@@ -77,8 +77,8 @@ button {
   font-weight: 700;
 }
 
-button:active {
-  transform: scale(.98);
+button:disabled {
+  opacity: .55;
 }
 
 .message {
@@ -113,101 +113,276 @@ button:active {
 
 <div class="container">
 
-<div class="header">
-  <div class="gift">🎁</div>
-  <h1>Amigo Oculto 2026</h1>
+  <div class="header">
+    <div class="gift">🎁</div>
+    <h1>Amigo Oculto 2026</h1>
 
-  <div class="subtitle">
-    Escolhe o teu nome e depois a marca que desejas.
-    <br>
-    Cada marca só poderá ser escolhida uma vez.
+    <div class="subtitle">
+      Escolhe o teu nome e depois a marca que desejas.
+      <br>
+      Cada marca só poderá ser escolhida uma vez.
+    </div>
   </div>
-</div>
 
-<div class="card">
+  <div class="card">
 
-<label for="person">👤 O teu nome</label>
+    <label for="person">👤 O teu nome</label>
 
-<select id="person">
-<option value="">Seleciona o teu nome</option>
-<option>Sany</option>
-<option>Any</option>
-<option>Weza</option>
-<option>Luyana</option>
-<option>Kátila</option>
-<option>Maury</option>
-<option>Lizandra</option>
-<option>Yara</option>
-<option>Solange</option>
-<option>Carina</option>
-</select>
+    <select id="person">
+      <option value="">Seleciona o teu nome</option>
+      <option>Sany</option>
+      <option>Any</option>
+      <option>Weza</option>
+      <option>Luyana</option>
+      <option>Kátila</option>
+      <option>Maury</option>
+      <option>Lizandra</option>
+      <option>Yara</option>
+      <option>Solange</option>
+      <option>Carina</option>
+    </select>
 
+    <label for="brand">🛍️ Escolhe uma marca</label>
 
-<label for="brand">🛍️ Escolhe uma marca</label>
+    <select id="brand">
+      <option value="">Seleciona uma marca</option>
+      <option>Versace Jeans</option>
+      <option>Emporio Armani</option>
+      <option>Lacoste</option>
+      <option>Aldo</option>
+      <option>DKNY</option>
+      <option>MK</option>
+      <option>Guess</option>
+      <option>CK</option>
+      <option>Love Moschino</option>
+      <option>Furla</option>
+    </select>
 
-<select id="brand">
-<option value="">Seleciona uma marca</option>
-<option>Versace Jeans</option>
-<option>Emporio Armani</option>
-<option>Lacoste</option>
-<option>Aldo</option>
-<option>DKNY</option>
-<option>MK</option>
-<option>Guess</option>
-<option>CK</option>
-<option>Love Moschino</option>
-<option>Furla</option>
-</select>
+    <button id="confirmButton">
+      Confirmar escolha 🎁
+    </button>
 
-<button onclick="chooseBrand()">
-Confirmar escolha 🎁
-</button>
+    <div id="message" class="message"></div>
 
-<div id="message" class="message"></div>
+  </div>
 
-</div>
-
-<div class="info">
-🔒 Depois de confirmada, a escolha ficará reservada.
-</div>
+  <div class="info">
+    🔒 Depois de confirmada, a escolha ficará reservada.
+  </div>
 
 </div>
 
+<script type="module">
 
-<script>
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-function chooseBrand() {
+import {
+  getDatabase,
+  ref,
+  onValue,
+  runTransaction
+}
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
-  const person =
-    document.getElementById("person").value;
 
-  const brand =
-    document.getElementById("brand").value;
+const firebaseConfig = {
+  apiKey: "AIzaSyAgTuvHCBDo-6gKABBluzl_cz2vyewcpD4",
+  authDomain: "amigo-oculto-2026.firebaseapp.com",
+  databaseURL: "https://amigo-oculto-2026-default-rtdb.firebaseio.com",
+  projectId: "amigo-oculto-2026",
+  storageBucket: "amigo-oculto-2026.firebasestorage.app",
+  messagingSenderId: "891182604847",
+  appId: "1:891182604847:web:e6164a307b421e1fe35cda"
+};
 
-  const message =
-    document.getElementById("message");
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+const selectionsRef = ref(database, "selections");
+
+const personSelect = document.getElementById("person");
+const brandSelect = document.getElementById("brand");
+const button = document.getElementById("confirmButton");
+const message = document.getElementById("message");
+
+let currentSelections = {};
+
+function showMessage(text, type) {
+  message.className = "message " + type;
+  message.style.display = "block";
+  message.innerHTML = text;
+}
+
+function refreshOptions() {
+
+  const usedPeople = Object.keys(currentSelections);
+  const usedBrands = Object.values(currentSelections);
+
+  Array.from(personSelect.options).forEach(option => {
+
+    if (!option.value) return;
+
+    if (usedPeople.includes(option.value)) {
+      option.disabled = true;
+      option.textContent =
+        option.value.replace(" ✓", "") + " ✓";
+    } else {
+      option.disabled = false;
+      option.textContent =
+        option.value.replace(" ✓", "");
+    }
+
+  });
+
+  Array.from(brandSelect.options).forEach(option => {
+
+    if (!option.value) return;
+
+    if (usedBrands.includes(option.value)) {
+      option.disabled = true;
+      option.textContent =
+        option.value.replace(" — reservada", "") +
+        " — reservada";
+    } else {
+      option.disabled = false;
+      option.textContent =
+        option.value.replace(" — reservada", "");
+    }
+
+  });
+}
+
+
+onValue(
+  selectionsRef,
+
+  snapshot => {
+
+    currentSelections = snapshot.val() || {};
+    refreshOptions();
+
+  },
+
+  error => {
+
+    console.error(error);
+
+    showMessage(
+      "⚠️ Não foi possível ligar à lista de escolhas. Atualiza a página e tenta novamente.",
+      "error"
+    );
+
+  }
+);
+
+
+button.addEventListener("click", async () => {
+
+  const person = personSelect.value;
+  const brand = brandSelect.value;
 
   if (!person || !brand) {
 
-    message.className = "message error";
-    message.style.display = "block";
-
-    message.innerHTML =
-      "⚠️ Seleciona o teu nome e uma marca.";
+    showMessage(
+      "⚠️ Seleciona o teu nome e uma marca.",
+      "error"
+    );
 
     return;
   }
 
-  message.className = "message success";
-  message.style.display = "block";
+  button.disabled = true;
+  button.textContent = "A confirmar...";
 
-  message.innerHTML =
-    "🎉 " + person +
-    ", escolheste <strong>" +
-    brand +
-    "</strong>!";
+  let reason = "";
 
-}
+  try {
+
+    const result = await runTransaction(
+      selectionsRef,
+      selections => {
+
+        selections = selections || {};
+
+        if (selections[person]) {
+          reason = "person";
+          return;
+        }
+
+        const brandsAlreadyTaken =
+          Object.values(selections);
+
+        if (brandsAlreadyTaken.includes(brand)) {
+          reason = "brand";
+          return;
+        }
+
+        selections[person] = brand;
+
+        return selections;
+      },
+      {
+        applyLocally: false
+      }
+    );
+
+    if (result.committed) {
+
+      showMessage(
+        "🎉 " + person +
+        ", a tua escolha <strong>" +
+        brand +
+        "</strong> foi confirmada e reservada!",
+        "success"
+      );
+
+      personSelect.value = "";
+      brandSelect.value = "";
+
+    } else {
+
+      if (reason === "person") {
+
+        showMessage(
+          "🔒 Este nome já fez uma escolha.",
+          "error"
+        );
+
+      } else if (reason === "brand") {
+
+        showMessage(
+          "😔 Essa marca acabou de ser escolhida. Escolhe outra marca.",
+          "error"
+        );
+
+      } else {
+
+        showMessage(
+          "⚠️ Não foi possível confirmar. Tenta novamente.",
+          "error"
+        );
+
+      }
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    showMessage(
+      "⚠️ Ocorreu um erro ao guardar a escolha. Tenta novamente.",
+      "error"
+    );
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "Confirmar escolha 🎁";
+
+  }
+
+});
 
 </script>
 
