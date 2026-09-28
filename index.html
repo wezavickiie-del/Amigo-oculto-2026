@@ -88,6 +88,7 @@ button:disabled {
   border-radius: 14px;
   text-align: center;
   font-weight: 600;
+  line-height: 1.5;
 }
 
 .success {
@@ -118,9 +119,9 @@ button:disabled {
     <h1>Amigo Oculto 2026</h1>
 
     <div class="subtitle">
-      Escolhe o teu nome e depois a marca que desejas.
+      Escolhe apenas o teu nome.
       <br>
-      Cada marca só poderá ser escolhida uma vez.
+      O site vai sortear automaticamente uma marca disponível para ti.
     </div>
   </div>
 
@@ -142,24 +143,8 @@ button:disabled {
       <option>Carina</option>
     </select>
 
-    <label for="brand">🛍️ Escolhe uma marca</label>
-
-    <select id="brand">
-      <option value="">Seleciona uma marca</option>
-      <option>Versace Jeans</option>
-      <option>Emporio Armani</option>
-      <option>Lacoste</option>
-      <option>Aldo</option>
-      <option>DKNY</option>
-      <option>MK</option>
-      <option>Guess</option>
-      <option>CK</option>
-      <option>Love Moschino</option>
-      <option>Furla</option>
-    </select>
-
     <button id="confirmButton">
-      Confirmar escolha 🎁
+      Sortear a minha marca 🎁
     </button>
 
     <div id="message" class="message"></div>
@@ -167,7 +152,7 @@ button:disabled {
   </div>
 
   <div class="info">
-    🔒 Depois de confirmada, a escolha ficará reservada.
+    🔒 Cada pessoa recebe apenas uma marca e nenhuma marca será repetida.
   </div>
 
 </div>
@@ -185,7 +170,6 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyAgTuvHCBDo-6gKABBluzl_cz2vyewcpD4",
   authDomain: "amigo-oculto-2026.firebaseapp.com",
@@ -202,9 +186,21 @@ const database = getDatabase(app);
 const selectionsRef = ref(database, "selections");
 
 const personSelect = document.getElementById("person");
-const brandSelect = document.getElementById("brand");
 const button = document.getElementById("confirmButton");
 const message = document.getElementById("message");
+
+const brands = [
+  "Versace Jeans",
+  "Emporio Armani",
+  "Lacoste",
+  "Aldo",
+  "DKNY",
+  "MK",
+  "Guess",
+  "CK",
+  "Love Moschino",
+  "Furla"
+];
 
 let currentSelections = {};
 
@@ -215,87 +211,54 @@ function showMessage(text, type) {
 }
 
 function refreshOptions() {
-
   const usedPeople = Object.keys(currentSelections);
-  const usedBrands = Object.values(currentSelections);
 
   Array.from(personSelect.options).forEach(option => {
-
     if (!option.value) return;
 
     if (usedPeople.includes(option.value)) {
       option.disabled = true;
-      option.textContent =
-        option.value.replace(" ✓", "") + " ✓";
+      option.textContent = option.value.replace(" ✓", "") + " ✓";
     } else {
       option.disabled = false;
-      option.textContent =
-        option.value.replace(" ✓", "");
+      option.textContent = option.value.replace(" ✓", "");
     }
-
-  });
-
-  Array.from(brandSelect.options).forEach(option => {
-
-    if (!option.value) return;
-
-    if (usedBrands.includes(option.value)) {
-      option.disabled = true;
-      option.textContent =
-        option.value.replace(" — reservada", "") +
-        " — reservada";
-    } else {
-      option.disabled = false;
-      option.textContent =
-        option.value.replace(" — reservada", "");
-    }
-
   });
 }
 
-
 onValue(
   selectionsRef,
-
   snapshot => {
-
     currentSelections = snapshot.val() || {};
     refreshOptions();
-
   },
-
   error => {
-
     console.error(error);
 
     showMessage(
-      "⚠️ Não foi possível ligar à lista de escolhas. Atualiza a página e tenta novamente.",
+      "⚠️ Não foi possível ligar à lista do sorteio. Atualiza a página e tenta novamente.",
       "error"
     );
-
   }
 );
-
 
 button.addEventListener("click", async () => {
 
   const person = personSelect.value;
-  const brand = brandSelect.value;
 
-  if (!person || !brand) {
-
+  if (!person) {
     showMessage(
-      "⚠️ Seleciona o teu nome e uma marca.",
+      "⚠️ Seleciona primeiro o teu nome.",
       "error"
     );
-
     return;
   }
 
   button.disabled = true;
-  button.textContent = "A confirmar...";
+  button.textContent = "A sortear... 🎁";
 
   let reason = "";
+  let assignedBrand = "";
 
   try {
 
@@ -307,18 +270,27 @@ button.addEventListener("click", async () => {
 
         if (selections[person]) {
           reason = "person";
+          assignedBrand = selections[person];
           return;
         }
 
-        const brandsAlreadyTaken =
-          Object.values(selections);
+        const usedBrands = Object.values(selections);
 
-        if (brandsAlreadyTaken.includes(brand)) {
-          reason = "brand";
+        const availableBrands = brands.filter(
+          brand => !usedBrands.includes(brand)
+        );
+
+        if (availableBrands.length === 0) {
+          reason = "noBrands";
           return;
         }
 
-        selections[person] = brand;
+        const randomIndex = Math.floor(
+          Math.random() * availableBrands.length
+        );
+
+        assignedBrand = availableBrands[randomIndex];
+        selections[person] = assignedBrand;
 
         return selections;
       },
@@ -331,39 +303,34 @@ button.addEventListener("click", async () => {
 
       showMessage(
         "🎉 " + person +
-        ", a tua escolha <strong>" +
-        brand +
-        "</strong> foi confirmada e reservada!",
+        ", a tua marca sorteada foi <strong>" +
+        assignedBrand +
+        "</strong>!<br><br>🔒 A marca ficou reservada para ti.",
         "success"
       );
 
       personSelect.value = "";
-      brandSelect.value = "";
+
+    } else if (reason === "person") {
+
+      showMessage(
+        "🔒 Este nome já participou no sorteio.",
+        "error"
+      );
+
+    } else if (reason === "noBrands") {
+
+      showMessage(
+        "⚠️ Todas as marcas já foram sorteadas.",
+        "error"
+      );
 
     } else {
 
-      if (reason === "person") {
-
-        showMessage(
-          "🔒 Este nome já fez uma escolha.",
-          "error"
-        );
-
-      } else if (reason === "brand") {
-
-        showMessage(
-          "😔 Essa marca acabou de ser escolhida. Escolhe outra marca.",
-          "error"
-        );
-
-      } else {
-
-        showMessage(
-          "⚠️ Não foi possível confirmar. Tenta novamente.",
-          "error"
-        );
-
-      }
+      showMessage(
+        "⚠️ Não foi possível concluir o sorteio. Tenta novamente.",
+        "error"
+      );
     }
 
   } catch (error) {
@@ -371,14 +338,14 @@ button.addEventListener("click", async () => {
     console.error(error);
 
     showMessage(
-      "⚠️ Ocorreu um erro ao guardar a escolha. Tenta novamente.",
+      "⚠️ Ocorreu um erro ao guardar o sorteio. Tenta novamente.",
       "error"
     );
 
   } finally {
 
     button.disabled = false;
-    button.textContent = "Confirmar escolha 🎁";
+    button.textContent = "Sortear a minha marca 🎁";
 
   }
 
