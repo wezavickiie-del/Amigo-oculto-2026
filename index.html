@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Amigo Oculto 2026</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(135deg,#fff7fa,#f4e7ef);
+  color: #34242c;
+}
+
+.container {
+  max-width: 520px;
+  margin: auto;
+  padding: 28px 20px 50px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.gift {
+  font-size: 55px;
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: 31px;
+}
+
+.subtitle {
+  color: #7c6872;
+  line-height: 1.5;
+}
+
+.card {
+  background: white;
+  padding: 22px;
+  border-radius: 22px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+}
+
+label {
+  display: block;
+  font-weight: 700;
+  margin: 18px 0 8px;
+}
+
+select {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  margin-top: 24px;
+  padding: 16px;
+  border: 0;
+  border-radius: 14px;
+  background: #252025;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+.message {
+  display: none;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.success {
+  background: #e8f8ee;
+  color: #166534;
+}
+
+.error {
+  background: #ffe9e9;
+  color: #9b1c1c;
+}
+
+.info {
+  margin-top: 25px;
+  text-align: center;
+  color: #7c6872;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+  <div class="gift">🎁</div>
+  <h1>Amigo Oculto 2026</h1>
+
+  <div class="subtitle">
+    Escolhe o teu nome e depois a marca que desejas.
+    <br>
+    Cada marca só poderá ser escolhida uma vez.
+  </div>
+</div>
+
+<div class="card">
+
+<label for="person">👤 O teu nome</label>
+
+<select id="person">
+<option value="">Seleciona o teu nome</option>
+<option>Sany</option>
+<option>Any</option>
+<option>Weza</option>
+<option>Luyana</option>
+<option>Kátila</option>
+<option>Maury</option>
+<option>Lizandra</option>
+<option>Yara</option>
+<option>Solange</option>
+<option>Carina</option>
+</select>
+
+
+<label for="brand">🛍️ Escolhe uma marca</label>
+
+<select id="brand">
+<option value="">Seleciona uma marca</option>
+<option>Versace Jeans</option>
+<option>Emporio Armani</option>
+<option>Lacoste</option>
+<option>Aldo</option>
+<option>DKNY</option>
+<option>MK</option>
+<option>Guess</option>
+<option>CK</option>
+<option>Love Moschino</option>
+<option>Furla</option>
+</select>
+
+<button onclick="chooseBrand()">
+Confirmar escolha 🎁
+</button>
+
+<div id="message" class="message"></div>
+
+</div>
+
+<div class="info">
+🔒 Depois de confirmada, a escolha ficará reservada.
+</div>
+
+</div>
+
+
+<script>
+
+function chooseBrand() {
+
+  const person =
+    document.getElementById("person").value;
+
+  const brand =
+    document.getElementById("brand").value;
+
+  const message =
+    document.getElementById("message");
+
+  if (!person || !brand) {
+
+    message.className = "message error";
+    message.style.display = "block";
+
+    message.innerHTML =
+      "⚠️ Seleciona o teu nome e uma marca.";
+
+    return;
+  }
+
+  message.className = "message success";
+  message.style.display = "block";
+
+  message.innerHTML =
+    "🎉 " + person +
+    ", escolheste <strong>" +
+    brand +
+    "</strong>!";
+
+}
+
+</script>
+
+</body>
+</html>
